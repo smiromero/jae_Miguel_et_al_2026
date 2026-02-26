@@ -16,8 +16,7 @@ summarise_annual_regime <- function(data, vars, var_forest, var_grid) {
       n_events = if_else(sum_area == 0, 0, n_events),
       frequency = (n_events / forest_cover) ,
       rate = (sum_area * 100) / forest_ha,
-      # * 100,
-      
+
     ) %>%
     arrange(across(all_of(vars)), year) %>%
     ungroup()
@@ -165,31 +164,23 @@ create_ggbiplot <- function(choices,
     arrow_size <-  4
   }
   
-  # Crear el plot PCA
   pca_plot <- ggbiplot(
     pca.mod,
     choices = choices,
     labels = NULL,
-    # Si queremos que aparezca el numero del grid en vez de puntos: decades.i$grid_id,
     groups = factor(decades.mclust.class.i),
     varname.size = 0,
-    # Aumenta el tamaño de los nombres de las variables (puedes ajustar según lo que necesites)
     ellipse = TRUE,
-    # Incluir elipses
     ellipse.linewidth = 1,
-    # Grosor de las elipses más fino
     var.axes = TRUE,
-    # Mostrar los vectores de las variables
     var.factor = 3,
     var.scale  = 1,
     arrow.size = arrow_size,
-    # Aumenta el tamaño de las flechas (para que sean más largas)
     alpha = 0.3,
     alpha_arrow = 0.7,
     repel = FALSE
   ) +
-    scale_color_manual(values = color_palette, guide = "none")  # Define los colores según la paleta
-  # Personalización del grosor de puntos y elipses
+    scale_color_manual(values = color_palette, guide = "none")  
   pca_plot +
     geom_point(
       data = mclust.stats$mean,
@@ -204,10 +195,8 @@ create_ggbiplot <- function(choices,
       ),
       size = 4,
       shape = 21,
-      # Forma que soporta relleno y borde
       stroke = 1,
-      # Grosor del borde
-      color = "grey20"  # Color del borde
+      color = "grey20"  
     ) +
     ggrepel::geom_text_repel(
       data = loadings.pca,
@@ -223,11 +212,10 @@ create_ggbiplot <- function(choices,
     ) +
     
     scale_fill_manual(values = color_palette, name = "Regime") +
-    # ggtitle(plot_title) +  # Título personalizado
-    envalysis::theme_publish() + # Estilo minimalista
+    envalysis::theme_publish() + 
     labs(x = "PCA 1", y = "PCA 2") +
     theme(legend.position = "none",
-          plot.title = element_text(size = 14, face = "bold"))   # Aplicar la paleta de colores y los nuevos nombres
+          plot.title = element_text(size = 14, face = "bold"))   
 }
 
 agent_data_decades <- function(regime.data, decades.list, var.agent) {
@@ -280,37 +268,26 @@ plot_attribute_distribution <- function(agent.data.decades, write_out = TRUE) {
   })
 }
 
-# Definir la función
 plot_correlation <- function(data, logo_path = (here(paste0(
   "data/reference/icons/", var.agent, ".png"
 )))) {
-  # Calcular la matriz de correlación excluyendo las columnas 'grid_id' y 'period'
   corr_matrix <- data %>%
     bind_rows() %>%
     dplyr::select(-c(grid_id, agent)) %>%
     cor(use = "complete.obs")
   
   
-  # Crear el gráfico de correlación
   corr_plot <- ggcorrplot::ggcorrplot(
     corr_matrix,
     type = "upper",
     hc.order = TRUE,
-    # Similar a order = "hclust"
     lab = TRUE,
-    # Mostrar los coeficientes de correlación
     lab_size = 6,
-    # Tamaño de los números
     colors = c("blue", "white", "red"),
-    # Paleta de colores
     tl.cex = 50 / .pt,
-    # Tamaño de las etiquetas de las variables
     tl.col = "black",
-    # Color de las etiquetas de las variables
     tl.srt = 45
-  )              # Rotación de las etiquetas
   
-  # Cargar la imagen del logo
   logo <- cowplot::ggdraw() +
     cowplot::draw_image(
       logo_path,
@@ -321,12 +298,10 @@ plot_correlation <- function(data, logo_path = (here(paste0(
       scale = 0.6
     )
   
-  # Combinar el gráfico de correlación y el logo
   final_plot <- cowplot::ggdraw(corr_plot) +
     cowplot::draw_plot(logo, 0, 0, 1, 1)
   
   
-  # Guardar el gráfico en formato TIFF
   ggsave(
     here(
       'output',
@@ -339,18 +314,14 @@ plot_correlation <- function(data, logo_path = (here(paste0(
     dpi = 300
   )
   
-  # Mostrar mensaje de confirmación
   message("El gráfico ha sido guardado")
-  # Mostrar el gráfico final
   print(final_plot)
 }
 
-# Función para crear y guardar el gráfico de correlación
 plot_correlation_article <- function(agent_name,
                                      var.agent,
                                      grid.scale,
                                      n.periods) {
-  # Leer y procesar datos
   corr_data <- readRDS(here(
     "data",
     "reference",
@@ -369,14 +340,12 @@ plot_correlation_article <- function(agent_name,
     dplyr::select(where( ~ sd(., na.rm = TRUE) != 0)) %>%
     cor(use = "complete.obs")
   
-  # Crear gráfico
   corr_plot <- ggcorrplot::ggcorrplot(
     corr_data,
     hc.order = TRUE,
     type = "lower",
     lab = TRUE,
     lab_size = 5,
-    # más pequeño para que no se solape
     method = "square",
     colors = c("#6D9EC1", "white", "#E46767"),
     title = paste("Matriz de correlación -", agent_name),
@@ -394,13 +363,10 @@ plot_correlation_article <- function(agent_name,
         size = 15,
         face = "bold"
       ),
-      # texto de variables X
       axis.text.y = element_text(size = 15, face = "bold"),
-      # texto de variables Y
       legend.title = element_text(size = 12),
       legend.text = element_text(size = 15)
     )
-  # Guardar gráfico en tamaño grande
   cowplot::save_plot(
     here(
       "output",
@@ -426,39 +392,32 @@ plot_correlation_article <- function(agent_name,
 
 
 plot_pca <- function(pca, write_out = TRUE) {
-  # Cargar la imagen del logo
   
-  # Obtener y mostrar eigenvalues
   eigenvalues <- get_eigenvalue(pca)
   print(eigenvalues)
   
-  # Configuración de tema general para todos los gráficos
   common_theme <- theme(
     text = element_text(size = 18),
     axis.title = element_text(size = 18),
     axis.text = element_text(size = 18)
   )
   
-  # Configurar eigenvalues.plot
   eigenvalues.plot <- fviz_eig(pca, main = '') +
     common_theme +
     geom_bar(stat = "identity",
              fill = "grey30",
              color = 'grey30')
   
-  # Configurar pca.var.plot
   pca.var.plot <- fviz_pca_var(pca, col.var = 'contrib', repel = TRUE) +
     scale_color_gradient(low = "#ffba08", high = "#6a040f") +
     common_theme
   
-  # Configurar pca.var.contrib.plot
   pca.var.contrib.plot <- fviz_contrib(pca, choice = 'var') +
     geom_bar(stat = "identity",
              fill = "grey30",
              color = 'grey30') +
     common_theme +
     ggtitle("")
-  # Combinar los gráficos
   combined_plot <- plot_grid(
     eigenvalues.plot,
     pca.var.contrib.plot,
@@ -468,13 +427,11 @@ plot_pca <- function(pca, write_out = TRUE) {
     label_size = 20
   )
   combined_plot2 <-  plot_grid(pca.var.plot, labels = "C", label_size = 20)
-  # Combinar ambos usando plot_grid
   combined_plot3 <- plot_grid(combined_plot,
                               combined_plot2,
                               ncol = 2,
-                              rel_heights = c(2, 1)) # Ajustar proporciones si es necesario
+                              rel_heights = c(2, 1)) 
   plot(combined_plot3)
-  # Añadir el logo al gráfico combinado
   
   if (write_out == TRUE) {
     ggsave(
@@ -490,40 +447,35 @@ plot_pca <- function(pca, write_out = TRUE) {
       dpi = 300
     )
     
-    # Mostrar mensaje de confirmación
     message("El gráfico ha sido guardado")
   } else {
     message("El gráfico no ha sido guardado")
   }
-  # Guardar el gráfico en formato PNG
   
-  
-  # Mostrar el gráfico final
-  print(combined_plot3)
+    print(combined_plot3)
 }
 
 
 
-# Define la función para crear el mapa
 cluster_maps <- function(agent_shp, decades_list, show_legend = FALSE) {
-  tm_shape(st_as_sf(agent_shp)) +  # Añadir mapa base de Europa
-    tm_fill(col = "gray90", alpha = 1) +  # Rellenar con gris claro
-    tm_shape(st_as_sf(world.boundaries)) +  # Añadir el world.shp recortado
-    tm_fill(col = "gray80", alpha = 1) +  # Líneas negras para world.shp
-    tm_shape(st_as_sf(europe.boundaries)) +  # Añadir mapa base de Europa
-    tm_fill(col = "gray80", alpha = 1) +  # Rellenar con gris claro
-    tm_shape(st_as_sf(agent_shp)) +  # Añadir los datos del agente
+  tm_shape(st_as_sf(agent_shp)) + 
+    tm_fill(col = "gray90", alpha = 1) + 
+    tm_shape(st_as_sf(world.boundaries)) + 
+    tm_fill(col = "gray80", alpha = 1) +  
+    tm_shape(st_as_sf(europe.boundaries)) +  
+    tm_fill(col = "gray80", alpha = 1) + 
+    tm_shape(st_as_sf(agent_shp)) + 
     tm_borders() +
     tm_fill(
       col = "class",
       palette = var.colors[-6],
       alpha = 1,
       legend.show = show_legend
-    ) +  # Colorear según la clase
-    tm_grid(n.x = 4, n.y = 3, alpha = 0.4) +  # Líneas en color gris y con un poco de transparencia
+    ) + 
+    tm_grid(n.x = 4, n.y = 3, alpha = 0.4) +  
     tm_layout(
       main.title = paste(decades_list[1], decades_list[2], sep = '-'),
-      legend.text.size = 4 # Ajustar tamaño de texto de la leyenda
+      legend.text.size = 4 
     )
 }
 
@@ -556,11 +508,9 @@ create_cluster_map <- function(var_data, var_period, var_legend, var = 'reclass'
     )
     
   }
-  # Definir los valores en la escala, asegurando que el valor medio esté en el centro
-  # values <- scales::rescale(color_scale)
   
   ggplot() +
-    # Capa de los límites del mundo
+    
     geom_sf(
       data = st_as_sf(world.boundaries %>% filter(
         !name %in% c(
@@ -575,12 +525,12 @@ create_cluster_map <- function(var_data, var_period, var_legend, var = 'reclass'
       show.legend = FALSE
     ) +
     
-    # Capa de los agentes con relleno personalizado y líneas de los grids visibles
+   
     geom_sf(
       data = st_as_sf(var_data),
       aes_string(fill = var),
       color = NA,
-      # Líneas de los grids en negro
+     
       size = 0.05,
       alpha = 0.9,
       show.legend = FALSE
@@ -588,42 +538,32 @@ create_cluster_map <- function(var_data, var_period, var_legend, var = 'reclass'
     geom_sf(
       data = st_as_sf(grids.noforest),
       color = 'grey85',
-      # Colores de las líneas según 'BIOME_NAME'
       fill = 'white',
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.4,
       show.legend = FALSE
     ) +
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
     geom_sf(
       data = st_as_sf(europe.boundaries),
       color = 'grey60',
-      # Colores de las líneas según 'BIOME_NAME'
       fill = NA,
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.1,
       show.legend = FALSE
     ) +
     labs(fill = "") +
-    # Escala de colores personalizada para los agentes
     scale_fill_manual(values = color_scale) +
     
-    # Escala simple
     annotation_scale(
       location = "bl",
-      # Bottom left
       width_hint = 0.1,
       style = 'ticks',
       text_family = "Arial",
-      text_col = "grey50"  # Color gris para la escala
+      text_col = "grey50"  
     ) +
     
-    # Brújula simple
     annotation_north_arrow(
       location = "br",
-      # Top left
       which_north = "true",
       height = unit(1, "cm"),
       width = unit(1, "cm"),
@@ -643,17 +583,12 @@ create_cluster_map <- function(var_data, var_period, var_legend, var = 'reclass'
       legend.title = element_blank(),
       legend.text = element_text(size = 10),
       text = element_text(color = "grey50", size = 14),
-      # Color gris para el texto general
       axis.title = element_blank(),
-      # Eliminar títulos de los ejes
       axis.text = element_text(color = "grey50"),
-      # Color gris para los números del grid
       panel.grid.major = element_line(color = "grey50", size = 0.2),
-      # Líneas de la cuadrícula mayor
-      panel.grid.minor = element_line(color = "grey50", size = 0.1)   # Líneas de la cuadrícula menor
+      panel.grid.minor = element_line(color = "grey50", size = 0.1)  
     ) +
     envalysis::theme_publish(base_linewidth = 0.2) +
-    # Especificar la proyección ETRS89-extended / LAEA Europe (EPSG:3035)
     coord_sf(crs = st_crs(3035))
   
 }
@@ -689,62 +624,46 @@ create_cluster_map_basic <- function(var_data, var_period, var_legend, var = 're
     )
     
   }
-  # Definir los valores en la escala, asegurando que el valor medio esté en el centro
-  # values <- scales::rescale(color_scale)
-  
+
   ggplot() +
-    # Capa de los límites del mundo
-    
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
     geom_sf(
       data = st_as_sf(europe.boundaries),
       color = NA,
-      # Colores de las líneas según 'BIOME_NAME'
       fill = 'grey30',
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.2,
       show.legend = FALSE
     ) +
     
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
     geom_sf(
       data = st_as_sf(grids.noforest),
       color = 'grey85',
-      # Colores de las líneas según 'BIOME_NAME'
       fill = NA,
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.4,
       show.legend = FALSE
     ) +
     
-    # Capa de los agentes con relleno personalizado y líneas de los grids visibles
     geom_sf(
       data = st_as_sf(var_data),
       aes_string(fill = var),
       color = NA,
-      # Líneas de los grids en negro
       linewidth = 0,
       
       alpha = 0.9,
       show.legend = FALSE
     ) +
     
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
     geom_sf(
       data = st_as_sf(europe.boundaries),
       color = 'grey20',
-      # Colores de las líneas según 'BIOME_NAME'
       fill = NA,
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.7,
       show.legend = FALSE
     ) +
     
     labs(fill = "") +
-    # Escala de colores personalizada para los agentes
     scale_fill_manual(values = color_scale) +
     
     theme(
@@ -765,10 +684,9 @@ create_cluster_map_basic <- function(var_data, var_period, var_legend, var = 're
       legend.position = "none",
       legend.title = element_blank(),
       legend.text = element_text(size = 10),
-      text = element_text(color = "grey50", size = 14)  # Color gris para el texto general
+      text = element_text(color = "grey50", size = 14)  
       
     ) +
-    # Especificar la proyección ETRS89-extended / LAEA Europe (EPSG:3035)
     coord_sf(crs = st_crs(3035))
   
 }
@@ -777,10 +695,8 @@ create_cluster_map_basic <- function(var_data, var_period, var_legend, var = 're
 
 
 agent_icon <- function(agent, icons_path = "data/reference/icons/") {
-  # Carga el archivo PNG correspondiente al agente especificado
   logo_agent <- png::readPNG(here::here(paste0(icons_path, agent, ".png")), native = TRUE)
   
-  # Inserta la imagen del ícono en un gráfico
   logo_ggdraw <- cowplot::ggdraw() +
     cowplot::draw_image(
       logo_agent,
@@ -804,13 +720,11 @@ generate_mclusters  <- function(mclust,
   mclust.class <- vector("list", n.periods)
   mclust.prob <- vector("list", n.periods)
   
-  # Primer período
   mclust.class[[1]] <- mclust$classification
   mclust.prob[[1]] <- as.data.frame(mclust$z) %>%
     mutate(max.prob = pmap_dbl(., max)) %>%
     select(max.prob)
   
-  # Períodos adicionales
   if (n.periods > 1) {
     for (i in 2:n.periods) {
       pred <- predict(mclust, purrr::pluck(period.pca, paste0('period', predict.period[i - 1])))
@@ -821,7 +735,6 @@ generate_mclusters  <- function(mclust,
     }
   }
   
-  # Asignar nombres
   period.names <- c(paste0('period', reference.period),
                     paste0('period', predict.period[1:(n.periods - 1)]))
   names(mclust.class) <- period.names
@@ -832,16 +745,12 @@ generate_mclusters  <- function(mclust,
 
 
 remove_outliers <- function(data, quantile_threshold = 0.99) {
-  # Calcular las distancias de Mahalanobis
   mahalanobis_distance <- mahalanobis(data, colMeans(data), cov(data))
   
-  # Calcular el umbral para los outliers
   threshold <- quantile(mahalanobis_distance, quantile_threshold)
   
-  # Identificar los outliers
   outliers <- mahalanobis_distance > threshold
   
-  # Filtrar los datos para eliminar outliers
   filtered_data <- data[!outliers, ]
   
   return(
@@ -917,10 +826,8 @@ process_period_data <- function(n.periods,
                                 decades.list,
                                 var.agent,
                                 grid.scale) {
-  # Crear una lista vacía para los resultados
   results_list <- list()
   
-  # Función auxiliar para clasificar los datos
   classify_data <- function(period_num,
                             period_data,
                             period_pca,
@@ -995,7 +902,6 @@ process_period_data <- function(n.periods,
       select(-var_agent, -grid_scale)
   }
   
-  # Para cada periodo, aplicar la función y almacenar los resultados en la lista
   for (i in 1:n.periods) {
     results_list[[i]] <- classify_data(
       i,
@@ -1009,7 +915,6 @@ process_period_data <- function(n.periods,
     )
   }
   
-  # Unir todos los resultados de la lista
   period.data.classified <- do.call(rbind, results_list)
   
   return(period.data.classified)
@@ -1025,16 +930,13 @@ generate_pca_plot_for_periods <- function(regime.data,
                                           loadings.pca,
                                           var.agent,
                                           grid.scale) {
-  # Función auxiliar para obtener los grid ids comunes
   get_grid_ids_intersect <- function(regime_data) {
     Reduce(base::intersect,
            list(regime_data[[1]]$grid_id, regime_data[[2]]$grid_id))
   }
   
-  # Obtener los grid ids comunes
   grid.id.intersect <- get_grid_ids_intersect(regime.data)
   
-  # Crear los parámetros para el PCA
   params.pca.period <- list(
     data = list(period.data.classified),
     x_var = list("PC1"),
@@ -1043,26 +945,20 @@ generate_pca_plot_for_periods <- function(regime.data,
     loadings_pca = list(loadings.pca)
   )
   
-  # Generar los gráficos de PCA usando pmap
   pca.periods.plot <- pmap(params.pca.period, create_pca_periods_plot)
   
-  # Asignar nombres a los gráficos
   names(pca.periods.plot) <- c("PCA 1&2")
   
-  # Combinar los gráficos en uno solo
   pca.periods.plot.join <- plot_grid(pca.periods.plot$`PCA 1&2`)
   
-  # Añadir el logo (ajustar según sea necesario)
   pca.periods.plot.join <- cowplot::ggdraw(pca.periods.plot.join) +
     cowplot::draw_plot(logo.ggdraw,
                        y = 0.1,
                        x = 0.1,
                        scale = 0.8)
   
-  # Mostrar el gráfico
   plot(pca.periods.plot.join)
   
-  # Guardar el gráfico como un archivo SVG
   cowplot::save_plot(
     here(
       'output',
@@ -1122,8 +1018,6 @@ apply_pca_to_periods <- function(n_periods,
   return(period_pca)
 }
 
-# Ejemplo de uso:
-# pca_results <- apply_pca_to_periods(n.periods, pca.mod, period.subset, reference.period, predict.period, pca_select)
 
 
 
@@ -1134,19 +1028,17 @@ reclass_cluster <- function(n_periods,
                             selector_forest,
                             europe) {
   period.reclass <- map(1:n_periods, function(period_subset) {
-    # Filtrando por el periodo
     europe.period <- europe_classified %>%
       filter(period %in% paste(decades_list[[period_subset]][1], decades_list[[period_subset]][2], sep = '-') |
                period == '0') %>%
       filter(!grid_id %in% selector_forest$grid_id)
     
-    # Uniendo con la base de datos de Europa y filtrando por los grids y clases
     period.classified.shp <- europe %>%
       dplyr::left_join(europe.period, by = 'grid_id') %>%
       filter(!grid_id %in% selector_forest$grid_id) %>%
       mutate(class2 = if_else(is.na(class2), factor("Residual"), class2),
              reclass = class2) %>%
-      st_as_sf()  # Convierte a formato espacial
+      st_as_sf()  
     
     return(period.classified.shp)
   })
@@ -1157,21 +1049,17 @@ reclass_cluster <- function(n_periods,
 reclass_by_neighbors <- function(n_periods,
                                  period_reclass,
                                  europe_classified) {
-  # Aplicar el re-clasificado por vecinos para cada periodo
   period.reclass <- purrr::map(1:n_periods, function(period) {
     period.reclass.i <- purrr::map2(period_reclass[[period]]$geometry, 1:nrow(period_reclass[[period]]), function(geoms, rows) {
-      # Crear índices de polígonos vecinos
       indices <- st_touches(period_reclass[[period]], geoms, sparse = FALSE)
       
       poligonos_vecinos <- period_reclass[[period]][indices, ]
       
-      # Condición para determinar si se debe cambiar la clase
       if (period_reclass[[period]][rows, ]$class2 != "Residual" &
           !period_reclass[[period]][rows, ]$class2 %in% poligonos_vecinos$class2 &
           nrow(poligonos_vecinos) > 0) {
         print(TRUE)
         
-        # Obtener la nueva clase más frecuente entre los vecinos
         new_class <- poligonos_vecinos %>%
           as_tibble() %>%
           group_by(class2) %>%
@@ -1183,7 +1071,6 @@ reclass_by_neighbors <- function(n_periods,
           pull(class2) %>%
           as.character()
         
-        # Asignar la nueva clase
         period_reclass[[period]][rows, ]$reclass <- new_class
       } else {
         print(FALSE)
@@ -1294,7 +1181,6 @@ classify_periods <- function(n.periods,
     paste0('mclust_data_', var.agent, '_', grid.scale, "_perc_TUM.rds")
   ))
   
-  # Crear mapas de clusters
   period.classified.shp <- map(1:n.periods, function(period_subset) {
     europe.period <- europe.classified %>%
       filter(period %in% paste(decades.list[[period_subset]][1], decades.list[[period_subset]][2], sep = '-') |
@@ -1344,7 +1230,6 @@ classify_periods <- function(n.periods,
   )
   
   
-  # Crear los gráficos con ggplot
   params <- list(
     var = rep(visualize.class, n.periods),
     var_data = period.classified.shp,
@@ -1475,8 +1360,6 @@ period_boxplot_absvalues <- function(period_data_classified,
     geom_violin(
       width = wdth,
       scale = "width",
-      # normaliza anchos entre grupos
-      
       trim = TRUE,
       alpha = 0.3,
       show.legend = FALSE
@@ -1494,11 +1377,10 @@ period_boxplot_absvalues <- function(period_data_classified,
       ncol = 3,
       scales = 'free',
       labeller = as_labeller(function(x)
-        rep("", length(x)))  # ← esta línea elimina los títulos
+        rep("", length(x))) 
       
     ) +
     envalysis::theme_publish(base_size = 15) +
-    # scale_x_continuous(breaks = seq(0, 1, by = 0.25)) +
     theme(
       strip.background = element_blank(),
       strip.placement = "outside",
@@ -1514,11 +1396,8 @@ period_boxplot_absvalues <- function(period_data_classified,
       ),
       
       panel.grid.major = element_line(color = alpha("grey30", 0.2), size = 0.1),
-      # panel.grid.minor = element_line(color = alpha("grey30", 0.1), size = 0.1),
       panel.grid.major.y = element_blank(),
-      # Quita las líneas verticales mayores
       panel.spacing = unit(0.1, "lines"),
-      # 👈 Reduce separación entre facetas
       title = element_blank()
     )
   
@@ -1551,12 +1430,9 @@ extract_legend <- function(period_data_classified,
     scale_fill_manual(values = var_colors) +
     labs(y = 'Cluster', x = NULL) +
     envalysis::theme_publish() +
-    theme(legend.position = "bottom")  # Asegurar que la leyenda esté visible
-  
-  # Obtener la leyenda
+    theme(legend.position = "bottom")  
   legends <- cowplot::get_legend(plot_with_legend, return_all = TRUE)
   
-  # Si hay varias leyendas, elige la principal (usualmente la primera)
   legend <- legends[[1]]
   
   return(legend)
@@ -1571,10 +1447,7 @@ cluster_transitions_map <- function(pattern,
                                     world.boundaries,
                                     europe.boundaries,
                                     var.colors.boxplot) {
-  # 5. Crear mapa
-  ggplot() +
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
-    
+  ggplot() +    
     geom_sf(
       data = pattern.dissolve,
       aes(fill = `1985-1997`),
@@ -1598,7 +1471,6 @@ cluster_transitions_map <- function(pattern,
       alpha = 0.7,
       show.legend = FALSE
     ) +
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
     geom_sf(
       data = grids_filtered_shp,
       color = 'grey60',
@@ -1610,13 +1482,10 @@ cluster_transitions_map <- function(pattern,
       
       show.legend = FALSE
     ) +
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
     geom_sf(
       data = st_as_sf(europe.boundaries),
       color = 'grey20',
-      # Colores de las líneas según 'BIOME_NAME'
       fill = NA,
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.7,
       show.legend = FALSE
@@ -1653,28 +1522,47 @@ cluster_transitions_map <- function(pattern,
       text = element_text(color = "grey50", size = 14)  # Color gris para el texto general
       
     ) +
-    # Especificar la proyección ETRS89-extended / LAEA Europe (EPSG:3035)
     coord_sf(crs = st_crs(3035))
 }
 
 
 cluster_trend_map <- function(trend_df,
                               var,
+                              alpha = 0.05,
                               xlab = NULL,
                               ylab = NULL) {
-  # Extraer vector de la variable desde el shapefile
-  variable_values <- trend_df[[var]]
   
-  # Calcular resumen con skimr
-  summary_trends <- skimr::skim(variable_values)
+  trend_df <- trend_df %>%
+    select(grid_id, variable, trend_relative, p_value) %>%
+    pivot_wider(
+      names_from  = variable,
+      values_from = c(trend_relative, p_value),
+      names_glue  = "{variable}_{.value}"
+    )
   
-  # Construir escala de color y límites basados en los percentiles 0 y 100
-  color_scale <- c(summary_trends$numeric.p0[1] + 0.0001,
-                   summary_trends$numeric.p100[1] - 0.0001)
+  annual.trends.shp <- europe %>%
+    right_join(trend_df, by = "grid_id")
   
-  limits_val <- c(summary_trends$numeric.p0[1] + 0.0001,
-                  0,
-                  summary_trends$numeric.p100[1] - 0.0001)
+  pvalue.name <- paste0(var, '_p_value' )
+  var.name <- paste0(var, '_trend_relative' )
+  
+  annual.trends.shp <- annual.trends.shp %>%
+    dplyr::mutate(significant = !!sym(pvalue.name) <= alpha,
+                  significant = if_else(is.na(significant), FALSE, significant ))
+  
+  trend_sig    <- annual.trends.shp %>% filter(significant)
+  trend_nonsig <- annual.trends.shp %>% filter(!significant)
+  
+  all_values <- annual.trends.shp[[var.name]]
+  
+  q <- quantile(all_values, probs = c(0.0, 1), na.rm = TRUE)
+  
+  maxlim <- max(q)
+  minlim <- min(q)
+  
+  color_scale <- c(minlim, maxlim)
+  
+  limits_val <- c(color_scale[1], 0, color_scale[2])
   
   values <- scales::rescale(c(
     color_scale[1],
@@ -1684,97 +1572,94 @@ cluster_trend_map <- function(trend_df,
     color_scale[2]
   ))
   
+  
+  # ---- 3. Plot ----
   ggplot() +
-    # Capa de los límites del mundo
     
-    
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
+    # Fondo: no forest
     geom_sf(
       data = st_as_sf(grids.noforest),
-      color = 'grey80',
-      # Colores de las líneas según 'BIOME_NAME'
-      fill = 'white',
-      # Polígonos transparentes
+      color = "grey80",
+      fill = "white",
       size = 0.05,
       alpha = 0.4,
       show.legend = FALSE
     ) +
     
-    # Datos de tendencias (variable)
     geom_sf(
-      data = st_as_sf(trend_df),
-      aes_string(fill = var),
+      data = st_as_sf(trend_sig),
+      aes_string(fill = var.name),
       color = NA,
-      linewidth = 0,
-      # Asegura que no haya grosor de línea
-      show.legend = TRUE
+      linewidth = 0
     ) +
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
+    
     geom_sf(
-      data = grids_filtered_shp,
-      color = 'grey60',
-      # Colores de las líneas según 'BIOME_NAME'
-      fill = 'grey60',
-      # Polígonos transparentes
-      size = 0.05,
-      alpha = 1,
-      
+      data = st_as_sf(trend_nonsig),
+      fill = "white",
+      color = NA,
+      linewidth = 0
+    ) +
+    
+    geom_sf(
+      data = suppressWarnings(st_centroid(st_as_sf(trend_nonsig))),
+      aes_string(colour = var.name),
+      size = 0.4,
+      shape = 16,
+      #alpha = 0.8,
       show.legend = FALSE
     ) +
-    # Capa de los límites de los biomas con color según 'BIOME_NAME' y líneas sin relleno
+    
+    geom_sf(
+      data = grids_filtered_shp,
+      color = "grey60",
+      fill = "grey60",
+      size = 0.05,
+      show.legend = FALSE
+    ) +
     geom_sf(
       data = st_as_sf(europe.boundaries),
-      color = 'grey20',
-      # Colores de las líneas según 'BIOME_NAME'
+      color = "grey20",
       fill = NA,
-      # Polígonos transparentes
       size = 0.05,
       alpha = 0.3,
       show.legend = FALSE
     ) +
     
-    # Escala de colores personalizada para los agentes
     scale_fill_gradientn(
       colours = pals::ocean.balance(5),
-      values = values,
-      na.value = 'white',
-      breaks = limits_val,
-      name = NULL,
-      guide = guide_colorbar(barwidth = 0.3, barheight = 4)  # Ajusta ancho y alto
-      
+      values  = values,
+      limits  = color_scale,
+      breaks  = limits_val,
+      na.value = "white",
+      guide = guide_colorbar(barwidth = 0.3, barheight = 4)
+    ) +
+    scale_colour_gradientn(
+      colours = pals::ocean.balance(5),
+      values  = values,
+      limits  = color_scale,
+      na.value = "white",
+      guide = "none"
     ) +
     
     theme(
-      plot.margin = margin(
-        t = 0,
-        r = 0,
-        b = 0,
-        l = 0
-      ),
+      plot.margin = margin(0, 0, 0, 0),
       axis.text = element_blank(),
       axis.ticks = element_blank(),
-      axis.title.x = element_blank(),
-      axis.title.y = element_text(),
       panel.grid = element_blank(),
       panel.background = element_rect(fill = "transparent", color = NA),
       plot.background = element_rect(fill = "transparent", color = NA),
       legend.background = element_rect(fill = "transparent", color = NA),
       legend.box.background = element_rect(fill = "transparent", color = NA),
       legend.position = c(0.02, 0.9),
-      # Posición arriba a la izquierda
       legend.justification = c(0, 1),
-      # Justificación de la esquina
-      legend.location = "plot",
-      plot.title.position = "plot",
-      legend.title = element_blank(),
       legend.text = element_text(size = 10),
-      text = element_text(color = "grey50", size = 14)  # Color gris para el texto general
-      
+      text = element_text(color = "grey50", size = 14)
     ) +
-    # Especificar la proyección ETRS89-extended / LAEA Europe (EPSG:3035)
     coord_sf(crs = st_crs(3035)) +
-    labs(y = ylab, fill = "")
+    labs(y = ylab, fill = xlab)
 }
+
+
 
 
 
@@ -1832,7 +1717,6 @@ summarise_trends_by_group <- function(group_var = "biome",
         color = !!group_sym
       ),
       shape = 21,
-      # círculo con borde y relleno
       size = 5,
       stroke = 3,
       show.legend = FALSE
@@ -1927,13 +1811,12 @@ summarise_trends_by_group <- function(group_var = "biome",
   }
 }
 
+
 wilcoxon_tests <- function(data,
                            group_var,
                            variables = c("Size", "Severity", "Frequency")) {
-  # Generar todas las combinaciones por pares de niveles en group_var
   combinations <- combn(unique(data[[group_var]]), 2, simplify = FALSE)
   
-  # Definir función interna para un solo test
   wilcoxon_test <- function(var) {
     results <- lapply(combinations, function(pair) {
       subset_data <- data[data[[group_var]] %in% pair, ]
@@ -1951,7 +1834,6 @@ wilcoxon_tests <- function(data,
     do.call(rbind, results)
   }
   
-  # Ejecutar los tests para todas las variables
   all_results <- lapply(variables, wilcoxon_test)
   
   return(do.call(rbind, all_results))
@@ -1967,23 +1849,19 @@ calculate_trends <- function(data,
                              var_agent,
                              nombre_archivo,
                              guardar_csv = TRUE) {
-  # Filtrar periodo si se indica
   if (!is.null(periodo)) {
     data <- data %>% filter(year >= periodo[1], year <= periodo[2])
   }
   
-  # Agregar bioma si se indica
   if (agrupar_por_bioma) {
     data <- data %>%
       left_join(europe_df, by = "grid_id") %>%
       filter(!is.na(biome3))
   }
   
-  # Agrupadores
   agrupadores <- c(if (agrupar_por_bioma)
     "biome3", "variable", "year")
   
-  # Cálculo de tendencias
   resumen <- data %>%
     group_by(across(all_of(agrupadores))) %>%
     summarise(valor = mean(valor, na.rm = TRUE), .groups = "drop") %>%
@@ -2000,10 +1878,8 @@ calculate_trends <- function(data,
     ) %>%
     mutate(trend_abs = if_else(variable == "Severity", trend_abs * 100, trend_abs))
   
-  # Directorio base
   dir_out <- here("output", "plots", "disturbance_analysis", "TUM")
   
-  # Guardar como SVG
   cowplot::save_plot(
     file = file.path(dir_out, paste0(nombre_archivo, var_agent, "_TUM.svg")),
     plot = gridExtra::tableGrob(resumen),
@@ -2012,7 +1888,6 @@ calculate_trends <- function(data,
     dpi = 400
   )
   
-  # Guardar como CSV si se indica
   if (guardar_csv) {
     readr::write_csv(resumen, file.path(dir_out, paste0(
       nombre_archivo, var_agent, "_TUM.csv"

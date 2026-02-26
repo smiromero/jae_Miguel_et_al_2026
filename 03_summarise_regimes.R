@@ -20,7 +20,7 @@ pacman::p_load(tidyverse,
 conflicts_prefer(dplyr::filter, dplyr::select, purrr::map)
 
 # Load functions
-source(here("lib/00_functions.R"))
+source(here("jae_Miguel_et_al_2026/lib/00_functions_jae.R"))
 list.scales <- c("_25km", "_50km", "_100km")
 
 #### Process disturbance data by grid scale  ####
@@ -67,65 +67,64 @@ for (scl in 1:3) {
   #### 1.Prepare or load patch-level data  ####
 
   ##### Option 1: Load and preprocess patch level data #####
-  patch.data <- dir_ls(
-    here(
-      "data",
-      "reference",
-      "patch_summary",
-      paste0("grid_level", grid.scale)
-    ),
-    recurse = FALSE,
-    regexp = "*patch_summary_grid*"
-  ) %>%
-    map( ~ readRDS(.x)) %>%
-    bind_rows()
-  
-  patch.data <- patch.data %>%
-    mutate(
-      year = years.rename[year],
-      biome = as.factor(biome),
-      country = as.factor(str_to_lower(country)),
-      agent = as.factor(
-        case_when(
-          agent == 1  ~ "wind_barkbeetle",
-          agent == 2  ~ "fire",
-          agent == 3  ~ "harvest",
-          agent == 4  ~ "mixed_agents"
-        )
-      )
-    ) %>%
-    filter(!agent %in% c("harvest" , "mixed_agents")) %>%
-    mutate(severity_mean =  scales::rescale(-severity_mean, to = c(0, 1))) %>%
-    select(
-      "biome",
-      "country",
-      "grid_id",
-      "year",
-      "agent",
-      "patch",
-      "count",
-      "area_ha",
-      "severity_mean",
-      "severity_sd",
-      "grid_ha",
-      "forest_ha"
-    )
-  
-  saveRDS(patch.data,
-          here(
-            "data",
-            "reference",
-            "patch_summary",
-            paste0("all_patch_data", grid.scale, ".rds")
-          ))
-  
-  
+    # patch.data <- dir_ls(
+    #   here(
+    #     "data",
+    #     "reference",
+    #     "patch_summary",
+    #     paste0("grid_level", grid.scale)
+    #   ),
+    #   recurse = FALSE,
+    #   regexp = "*patch_summary_grid*"
+    # ) %>%
+    #   map( ~ readRDS(.x)) %>%
+    #   bind_rows()
+    # 
+    # patch.data <- patch.data %>%
+    #   mutate(
+    #     year = years.rename[year],
+    #     biome = as.factor(biome),
+    #     country = as.factor(str_to_lower(country)),
+    #     agent = as.factor(
+    #       case_when(
+    #         agent == 1  ~ "wind_barkbeetle",
+    #         agent == 2  ~ "fire",
+    #         agent == 3  ~ "harvest",
+    #         agent == 4  ~ "mixed_agents"
+    #       )
+    #     )
+    #   ) %>%
+    #   filter(!agent %in% c("harvest" , "mixed_agents")) %>%
+    #   mutate(severity_mean =  scales::rescale(-severity_mean, to = c(0, 1))) %>%
+    #   select(
+    #     "biome",
+    #     "country",
+    #     "grid_id",
+    #     "year",
+    #     "agent",
+    #     "patch",
+    #     "count",
+    #     "area_ha",
+    #     "severity_mean",
+    #     "severity_sd",
+    #     "grid_ha",
+    #     "forest_ha"
+    #   )
+    # 
+    # saveRDS(patch.data,
+    #         here(
+    #           "data",
+    #           "reference",
+    #           "patch_summary",
+    #           paste0("all_patch_data", grid.scale, ".rds")
+    #         ))
+    # 
+    # 
   ##### Option 2: Once we have all_data created: #####
-  patch.data <- readRDS(here(
+  patch.data <- readRDS(here("jae_Miguel_et_al_2026",
     "data",
-    "reference",
-    "patch_summary",
-    paste0("all_patch_data", grid.scale, ".rds")
+    paste0("all_patch_data", grid.scale, ".rds") # Here import the all_patch_data.rds available in 
+    # https://datadryad.org/
   )) %>%
     select(-biome, -country)
   
@@ -149,7 +148,7 @@ for (scl in 1:3) {
       grid_ha = first(na.omit(grid_ha2)),
       percentage_forest = (forest_ha * 100) / grid_ha
     ) %>%
-    filter(percentage_forest < 8) %>%
+    filter(percentage_forest < 10) %>%
     select(grid_id2) %>%
     rename(grid_id = grid_id2)
   
@@ -253,7 +252,7 @@ for (scl in 1:3) {
     group_by(agent) %>%
     mutate(across(
       where(is.numeric) &
-        -contains("sev") &
+         -contains("sev") &
         !all_of("grid_id2"),
       ~ scales::rescale(., to = c(0, 1))
     )) %>%
@@ -272,11 +271,10 @@ for (scl in 1:3) {
   )
   
   saveRDS(grid_regime_tibble,
-          here(
+          here("jae_Miguel_et_al_2026",
             "data",
-            "reference",
-            "patch_summary",
             paste0("regime_", n.periods, "_period", grid.scale, ".rds")
           ))
   
 }
+

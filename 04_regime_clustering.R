@@ -22,30 +22,29 @@ list.scales  <- c("_25km", "_50km", "_100km")
 list.agents  <- c("fire", "wind_barkbeetle")
 n.periods    <- 3   # Options: 1, 2, 3
 
-source(here("lib/00_functions_jae.R"))
+source(here("jae_Miguel_et_al_2026/lib/00_functions_jae.R"))
 
 #### Loop across grid scales and agents ####
 
-for (grid.scale in list.scales) {
+for (grid.scale in list.scales[2]) {
 
   message("--------------------------------------------------")
   message("Processing scale: ", grid.scale)
   message("--------------------------------------------------")
   
   for (var.agent in list.agents) {
-    
     message("Agent: ", var.agent)
     
-    source(here("lib/00_variables_jae.R"))
+    source(here("jae_Miguel_et_al_2026/lib/00_variables_jae.R"))
     
     #### 1. Load and prepare regime data ####
 
-    regime.file <- readRDS(here(
-      "data",
-      "reference",
-      "patch_summary",
-      paste0("regime_", n.periods, "_period", grid.scale, ".rds")
-    ))
+    regime.file <- readRDS(
+      here("jae_Miguel_et_al_2026",
+           "data",
+           paste0("regime_", n.periods, "_period", grid.scale, ".rds")
+      )) # Here import the results from the 03_summarise_regime.r script, or the .rds availble at in 
+    # https://datadryad.org/
     
     regime.data <- regime.file %>%
       pull(period.regime.filter) %>%
@@ -516,12 +515,9 @@ for (grid.scale in list.scales) {
     
     plot(period.boxplots)
     
-    annual.regime <- readRDS(here(
-      "data",
-      "reference",
-      "patch_summary",
-      paste0("regime_", n.periods, "_period", grid.scale, ".rds")
-    )) %>%
+    annual.regime <- readRDS( here("jae_Miguel_et_al_2026",
+                                   "data",
+                                   paste0("regime_", n.periods, "_period", grid.scale, ".rds")    )) %>%
       pull(annual.regime.filter) %>% .[[1]]
     period3.regime <- summarise_period(annual.regime,
                                        vars = c('grid_id2', 'agent'),
@@ -574,7 +570,7 @@ for (grid.scale in list.scales) {
       dpi = 600
     )
     
-    legend_vertical <- ggplot(europe.classified, aes(y = probability, fill = class2)) +
+    legend_vertical <- ggplot(europe.classified, aes(y = probability, fill = reclass)) +
       geom_histogram() +
       scale_fill_manual(values = var.colors.boxplot) +
       theme_minimal()
@@ -593,7 +589,7 @@ for (grid.scale in list.scales) {
       dpi = 400
     )
     
-    legend_horizontal <- ggplot(europe.classified, aes(y = probability, fill = class2)) +
+    legend_horizontal <- ggplot(europe.classified, aes(y = probability, fill = reclass)) +
       geom_histogram() +
       scale_fill_manual(values = var.colors.boxplot) +
       theme_minimal() +
@@ -617,7 +613,7 @@ for (grid.scale in list.scales) {
       'output',
       'model',
       'cluster_creation',
-      paste0('mclust_data_', var.agent, '_', grid.scale, "_perc.rds")
+      paste0('mclust_data_', var.agent, '_', grid.scale, "_perc_TUM.rds")
     ))
     
     period.classified.shp <- map(1:n.periods, function(period_subset) {
@@ -650,7 +646,7 @@ for (grid.scale in list.scales) {
         ) +
         ylim(c(-4, 4))
     )
-    
+
     params <- list(
       var = rep('reclass', n.periods),
       var_data = period.classified.shp %>%
@@ -665,7 +661,7 @@ for (grid.scale in list.scales) {
     )
     params$var_legend[n.periods] <- 'bottom'
     period.classified.plot <- purrr::pmap(params, create_cluster_map_basic)
-    
+
     saveRDS(
       period.classified.plot[[3]],
       here(
@@ -681,7 +677,7 @@ for (grid.scale in list.scales) {
         )
       )
     )
-    
+
     cowplot::save_plot(
       here(
         'output',
@@ -701,6 +697,8 @@ for (grid.scale in list.scales) {
       base_asp = 1,
       dpi = 400
     )
+    period.classified.plot[[3]]
     
   }
 }
+

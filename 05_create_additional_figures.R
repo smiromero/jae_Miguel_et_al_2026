@@ -33,8 +33,8 @@ for (grid.scale in list.scales) {
   for (var.agent in list.agents) {
     message(" - Agente: ", var.agent)
     
-    source(here("lib/00_functions.R"))
-    source(here("lib/00_variables.R"))
+    source(here("jae_Miguel_et_al_2026/lib/00_functions_jae.R"))
+    source(here("jae_Miguel_et_al_2026/lib/00_variables_jae.R"))
     
     #### 1. Load and prepare cluster pattern data ####
     
@@ -190,12 +190,10 @@ for (grid.scale in list.scales) {
 
     #### 6. Calculation of annual trends (Sen's slope) in disturbance attributes ####
     
-    annual.regime <- readRDS(here(
-      "data",
-      "reference",
-      "patch_summary",
-      paste0("regime_", n.periods, "_period", grid.scale, ".rds")
-    )) %>%
+    annual.regime <- readRDS(
+      here("jae_Miguel_et_al_2026",
+           "data",
+           paste0("regime_", n.periods, "_period", grid.scale, ".rds"))) %>% 
       pull(annual.regime.filter) %>% .[[1]] %>%
       filter(agent == var.agent) %>%
       rename(
@@ -236,14 +234,14 @@ for (grid.scale in list.scales) {
         p_value = trend::sens.slope(valor, conf.level = 0.95)$p.value,
         .groups = "drop"
       ) %>%
-      mutate(trend_abs = if_else(variable == "Severity", trend_abs * 100, trend_abs)) #%>%
-    # filter( p_value <= 0.05)
+      mutate(trend_abs = if_else(variable == "Severity", trend_abs * 100, trend_abs)) %>%
+      filter( p_value <= 0.05)
     
     
     annual.trends.params <- list(
       trend_df = list(annual.trends, annual.trends, annual.trends),
       var      = c("Size", "Severity", "Frequency"),
-      ylab     = list("Size (ha)", "Severity (0-1)", expression_ha_year)  #ç
+      ylab     = list("Size (ha)", "Severity (0-1)", expression_ha_year) 
     )
     
     annual.trends.maps <- purrr::pmap(annual.trends.params, cluster_trend_map)
@@ -934,8 +932,7 @@ for (grid.scale in list.scales) {
       row.names = FALSE
     )
     
-    #### 11. Additional exploratory analysis: relationships between variables and 
-    cluster/biome ####
+    #### 11. Additional exploratory analysis: relationships between variables and  cluster/biome ####
     
     annual.reg <- annual.regime %>%
       left_join(europe_df, by = "grid_id") %>%
@@ -1660,3 +1657,4 @@ write.csv(
   ),
   row.names = FALSE
 )
+
